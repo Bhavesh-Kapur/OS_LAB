@@ -12,16 +12,9 @@ void insertionSort(int arr1[],int arr2[], int n) {
             arr1[j + 1] = arr1[j];
              arr2[j + 1] = arr2[j];
             j = j - 1;
-           
-        
         }
         arr1[j + 1] = key1;
         arr2[j + 1] = key2;
-
-        
-
-       
-        
         
     }
 
