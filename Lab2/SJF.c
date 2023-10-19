@@ -1,49 +1,69 @@
-#include <stdio.h>
+#include<stdio.h>
 
-struct Process {
-    int pid;
-    int burst_time;
-};
-
-void swap(struct Process *xp, struct Process *yp) {
-    struct Process temp = *xp;
-    *xp = *yp;
-    *yp = temp;
+void swap(int *x, int *y){       //function to swap the two processes based upon the arrival time 
+    int temp = *x;
+    *x=*y; 
+    *y=temp;
 }
 
-void sjf(struct Process processes[], int n) {
-   
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            if (processes[j].burst_time > processes[j + 1].burst_time) {
-                swap(&processes[j], &processes[j + 1]);
-            }
-        }
-    }
-
-    
-    int waiting_time = 0;
+void display(int BT[], int AT[],int n,int wt[],int ct[],int tat[],float avgtat,float avgwt) {
+    printf("Process\tBurst Time\tArrival Time\tCmpletion time\tTurn Around Time\t Waiting Time \n");
     for (int i = 0; i < n; i++) {
-        waiting_time += processes[i].burst_time;
-        printf("Process %d: Waiting Time = %d, Turnaround Time = %d\n",
-               processes[i].pid, waiting_time - processes[i].burst_time, waiting_time);
+        printf("%d\t  %d\t\t     %d\t\t\t%d\t\t%d\t\t\t%d\n", i + 1, BT[i], AT[i],ct[i],tat[i],wt[i]);
     }
 }
 
-int main() {
+void sjf(int bt[], int at[], int n) {
+    int wt[n], tat[n], ct[n];
+    float avg_wt = 0, avg_tat = 0;
+
+    ct[0] = at[0] + bt[0];
+    for (int i = 1; i < n; i++) {
+        ct[i] = ct[i - 1] + bt[i];
+    }
+
+    for (int i = 0; i < n; i++) {
+        wt[i] = ct[i] - at[i] - bt[i];
+    }
+
+    for (int i = 0; i < n; i++) {
+        tat[i] = bt[i] + wt[i];
+        avg_wt =avg_wt+ wt[i];
+        avg_tat =avg_tat+ tat[i];
+    }
+
+    avg_wt =avg_wt/n;
+    avg_tat =avg_tat/n;
+
+display(bt,at,n,wt,tat,ct,avg_tat,avg_wt);
+    
+}
+
+int main(){                                 //main method/body
     int n;
     printf("Enter the number of processes: ");
-    scanf("%d", &n);
+    scanf("%d",&n);
 
-    struct Process processes[n];
-
-    for (int i = 0; i < n; i++) {
-        printf("Enter burst time for Process %d: ", i + 1);
-        scanf("%d", &processes[i].burst_time);
-        processes[i].pid = i + 1;
+    int BT[n],AT[n];
+    for (int i = 0; i < n; i++)                        //input values for the array BT,AT
+    {
+        printf("Enter the Arrival time for %d :",(i+1));
+        scanf("%d",&AT[i]);
+        printf("Enter the Burst time for %d :",(i+1));
+        scanf("%d",&BT[i]);
     }
+    
 
-    sjf(processes, n);
-
-    return 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n-i-1; j++)
+        {
+            if (AT[j] > AT[j + 1]) {
+                swap(&AT[j], &AT[j + 1]);
+                swap(&BT[j], &BT[j + 1]);
+        }
+        
+    }   
+}
+sjf(BT,AT,n);
 }
