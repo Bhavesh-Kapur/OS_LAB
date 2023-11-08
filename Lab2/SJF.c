@@ -1,69 +1,83 @@
-#include<stdio.h>
-
-void swap(int *x, int *y){       //function to swap the two processes based upon the arrival time 
-    int temp = *x;
-    *x=*y; 
-    *y=temp;
-}
-
-void display(int BT[], int AT[],int n,int wt[],int ct[],int tat[],float avgtat,float avgwt) {
-    printf("Process\tBurst Time\tArrival Time\tCmpletion time\tTurn Around Time\t Waiting Time \n");
-    for (int i = 0; i < n; i++) {
-        printf("%d\t  %d\t\t     %d\t\t\t%d\t\t%d\t\t\t%d\n", i + 1, BT[i], AT[i],ct[i],tat[i],wt[i]);
-    }
-}
-
-void sjf(int bt[], int at[], int n) {
-    int wt[n], tat[n], ct[n];
-    float avg_wt = 0, avg_tat = 0;
-
-    ct[0] = at[0] + bt[0];
-    for (int i = 1; i < n; i++) {
-        ct[i] = ct[i - 1] + bt[i];
-    }
-
-    for (int i = 0; i < n; i++) {
-        wt[i] = ct[i] - at[i] - bt[i];
-    }
-
-    for (int i = 0; i < n; i++) {
-        tat[i] = bt[i] + wt[i];
-        avg_wt =avg_wt+ wt[i];
-        avg_tat =avg_tat+ tat[i];
-    }
-
-    avg_wt =avg_wt/n;
-    avg_tat =avg_tat/n;
-
-display(bt,at,n,wt,tat,ct,avg_tat,avg_wt);
-    
-}
-
-int main(){                                 //main method/body
-    int n;
-    printf("Enter the number of processes: ");
-    scanf("%d",&n);
-
-    int BT[n],AT[n];
-    for (int i = 0; i < n; i++)                        //input values for the array BT,AT
+#include <stdio.h>
+#include <stdlib.h>
+// Creating a structure to contain the id arrival time and burst time
+struct Process
+{
+    int id;
+    int arrival;
+    int burst;
+};
+// Sorting the process given by the user according to their arrival times
+void Bubble_Sort(struct Process *cpu, int inputs)
+{
+    for (int i = 0; i < inputs; i++)
     {
-        printf("Enter the Arrival time for %d :",(i+1));
-        scanf("%d",&AT[i]);
-        printf("Enter the Burst time for %d :",(i+1));
-        scanf("%d",&BT[i]);
-    }
-    
-
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n-i-1; j++)
+        for (int j = i + 1; j < inputs; j++)
         {
-            if (AT[j] > AT[j + 1]) {
-                swap(&AT[j], &AT[j + 1]);
-                swap(&BT[j], &BT[j + 1]);
+            if (cpu[i].arrival > cpu[j].arrival)
+            {
+                struct Process temp = cpu[i];
+                cpu[i] = cpu[j];
+                cpu[j] = temp;
+            }
         }
-        
-    }   
+    }
 }
-sjf(BT,AT,n);
+int main()
+{
+    printf("Enter how many processes do you want: ");
+    int input;
+    int total_time = 0;
+    scanf("%d", &input);
+    struct Process *cpu = malloc(input * sizeof(struct Process)); // Creating an array of processes
+    printf("Enter your id, arrival time and burst: ");
+    for (int i = 0; i < input; i++)
+    {
+        scanf("%d %d %d", &cpu[i].id, &cpu[i].arrival, &cpu[i].burst); // taking the input process id, the arrival and burst time from the user
+        total_time += cpu[i].burst;
+    }
+    Bubble_Sort(cpu, input);
+    int *completion = calloc(input, sizeof(int)); // using calloc to initialise all the values at address to be 0
+    int turnaround[input], waiting[input];        // creating arrays for containing the turnaround and waiting time of all the processes
+    int current_time = 0;
+    int empty = 0; // No. of processes that have been completed
+    float avg_turnaround = 0.0, avg_waiting = 0.0;
+    while (empty < input) // running till all processes are completed
+    {
+        int min_index = -1, minimum = total_time;
+        for (int i = 0; i < input; i++)
+        {
+            if (cpu[i].arrival <= current_time && completion[i] <= 0 && cpu[i].burst < minimum) // checking for arrival times then finding the shortest burst time
+            {
+                min_index = i;
+                minimum = cpu[i].burst;
+            }
+        }
+        if (min_index != -1)
+        {
+            completion[min_index] = current_time + cpu[min_index].burst; // running the process till it gets completed
+            current_time = completion[min_index];                        // current time will change to the time a process was completed
+            empty++;                                                     // incrementing the no.of processes completed
+        }
+        else
+        {
+            current_time++; // for when CPU is idle
+        }
+    }
+    printf("Process ID\tArrival Time\tBurst Time\tCompletion Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < input; i++)
+    { // Calculating the turnaround and waiting times and simultaneously printing it
+        turnaround[i] = completion[i] - cpu[i].arrival;
+        waiting[i] = turnaround[i] - cpu[i].burst;
+        avg_turnaround += turnaround[i];
+        avg_waiting += waiting[i];
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", cpu[i].id, cpu[i].arrival, cpu[i].burst, completion[i], turnaround[i], waiting[i]);
+    }
+    avg_turnaround /= input;
+    avg_waiting /= input;
+    printf("Average Waiting Time: %.2f\nAverage Turnaround Time: %.2f\n", avg_waiting, avg_turnaround);
+    // freeing the dynamically allocated memory to avoid memory leaks
+    free(completion);
+    free(cpu);
+    return 0;
 }
